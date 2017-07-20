@@ -1,84 +1,84 @@
-import {
-    Workspace,
-    MarkdownFile,
-    DeclarationInfo,
-    UsageInfo,
-    SymbolInfo,
-} from '../interfaces/markdown-file';
+// import {
+//     Workspace,
+//     MarkdownFile,
+//     DeclarationInfo,
+//     UsageInfo,
+//     SymbolInfo,
+// } from '../interfaces/markdown-file';
 
-import { Parser } from '../parser/parser';
+// import { Parser } from '../parser/parser';
 
-export class LanguageService {
-    private workspace: Workspace = {
-        files: {}
-    }
+// export class LanguageService {
+//     private workspace: Workspace = {
+//         files: {}
+//     }
 
-    updateFile = (absolutePath: string, content: string) => {
-        this.workspace.files[absolutePath] = Parser.parse(content, { absolutePath });
-    }
+//     updateFile = (absolutePath: string, content: string) => {
+//         this.workspace.files[absolutePath] = Parser.parse(content, { absolutePath });
+//     }
 
-    getFileSymbols = (absolutePath: string): SymbolInfo[] => {
-        const declarations = this.getFileDeclarations(absolutePath);
-        const usages = this.getFileUsages(absolutePath);
-        return [...declarations, ...usages];
-    }
+//     getFileSymbols = (absolutePath: string): SymbolInfo[] => {
+//         const declarations = this.getFileDeclarations(absolutePath);
+//         const usages = this.getFileUsages(absolutePath);
+//         return [...declarations, ...usages];
+//     }
 
-    getFileDeclarations = (absolutePath: string): DeclarationInfo[] => {
-        const file = this.workspace.files[absolutePath];
-        if (file) {
-            return file.declarations;
-        }
-        return [];
-    }
+//     getFileDeclarations = (absolutePath: string): DeclarationInfo[] => {
+//         const file = this.workspace.files[absolutePath];
+//         if (file) {
+//             return file.declarations;
+//         }
+//         return [];
+//     }
 
-    getFileUsages = (absoluteFilePath: string): UsageInfo[] => {
-        const file = this.workspace.files[absoluteFilePath];
-        if (file) {
-            return file.usages;
-        }
-        return [];
-    }
+//     getFileUsages = (absoluteFilePath: string): UsageInfo[] => {
+//         const file = this.workspace.files[absoluteFilePath];
+//         if (file) {
+//             return file.usages;
+//         }
+//         return [];
+//     }
 
-    getWorkspaceDeclarations = (): DeclarationInfo[] => {
-        const declarations: DeclarationInfo[] = [];
+//     getWorkspaceDeclarations = (): DeclarationInfo[] => {
+//         const declarations: DeclarationInfo[] = [];
 
-        let file: MarkdownFile;
-        let fileDeclarations: DeclarationInfo;
-        Object.keys(this.workspace.files).forEach(path => {
-            declarations.push(...this.getFileDeclarations(path));
-        });
+//         let file: MarkdownFile;
+//         let fileDeclarations: DeclarationInfo;
+//         Object.keys(this.workspace.files).forEach(path => {
+//             declarations.push(...this.getFileDeclarations(path));
+//         });
 
-        return declarations;
-    }
+//         return declarations;
+//     }
 
-    /**
-     * Gets usages across the workspace for a symbol.
-     * @param absoluteSymbolPath The absolute path to a symbol, e.g. "C:/path/to/file.md#symbol-name"
-     * 
-     * @memberof LanguageService
-     */
-    getWorkspaceSymbolReferences = (absoluteSymbolPath: string, includeDeclaration = true): SymbolInfo[] => {
-        const usages: SymbolInfo[] = [];
+//     /**
+//      * Gets usages across the workspace for a symbol.
+//      * @param absoluteSymbolPath The absolute path to a symbol, e.g. "C:/path/to/file.md#symbol-name"
+//      * 
+//      * @memberof LanguageService
+//      */
+//     getWorkspaceSymbolReferences = (absoluteSymbolPath: string, includeDeclaration = true): SymbolInfo[] => {
+//         const usages: SymbolInfo[] = [];
 
-        let fileUsages: UsageInfo[];
-        Object.keys(this.workspace.files).forEach(path => {
-            fileUsages = this.getFileUsages(path);
-            if (fileUsages && fileUsages.length > 0) {
-                usages.push(...fileUsages.filter(usage => {
-                    return usage.absoluteSymbolPath === absoluteSymbolPath;
-                }));
-            }
-        });
+//         let fileUsages: UsageInfo[];
+//         Object.keys(this.workspace.files).forEach(path => {
+//             fileUsages = this.getFileUsages(path);
+//             if (fileUsages && fileUsages.length > 0) {
+//                 usages.push(...fileUsages.filter(usage => {
+//                     return usage.absoluteSymbolPath === absoluteSymbolPath;
+//                 }));
+//             }
+//         });
 
-        if (includeDeclaration) {
-            const declaration = this.getWorkspaceDeclarations().find(declaration => {
-                return declaration.absoluteSymbolPath === absoluteSymbolPath;
-            });
-            if (declaration) {
-                usages.push(declaration);
-            }
-        }
+//         if (includeDeclaration) {
+//             const declaration = this.getWorkspaceDeclarations().find(declaration => {
+//                 return declaration.absoluteSymbolPath === absoluteSymbolPath;
+//             });
+//             if (declaration) {
+//                 usages.push(declaration);
+//             }
+//         }
 
-        return usages;
-    }
-}
+//         return usages;
+//     }
+// }

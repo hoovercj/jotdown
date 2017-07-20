@@ -77,6 +77,7 @@ etc.
   - Parent: the parent to this symbol. i.e. tags belong to a heading  
 ### symbol types provided by plugins and the data they add
 - heading
+  - depth: what level of heading is it?
 - heading-link 
   - value: the value between []
   - url: the value between ()

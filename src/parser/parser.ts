@@ -1,33 +1,45 @@
-import { AstNode } from '../interfaces/ast-node';
-import { SymbolInfo } from '../interfaces/symbol';
+import { TextDocument, AstNode, AstSymbolInfo, Position, Range } from '../interfaces/jotdown';
 import { Parser, ParserPlugin, Context, MarkdownFile } from '../interfaces/parser';
 const MarkdownToAst: { parse(text: string): AstNode } = require('markdown-to-ast');
 
-
-// Limitations:
-// * Aliases cannot contain commas
+export interface RawNode extends AstNode {
+    loc: RawLocation;
+}
+export interface RawLocation {
+    start: RawPosition;
+    end: RawPosition;
+}
+export interface RawPosition {
+    line: number; // start with 1
+    column: number;// start with 0
+    // This is for compatibility with JavaScript AST.
+    // https://gist.github.com/azu/8866b2cb9b7a933e01fe
+}
 
 export class MarkdownAstParser implements Parser {
 
     private pluginMap: {[pluginName: string]: ParserPlugin} = {};
-
     private plugins: ParserPlugin[] = [];
 
     constructor(plugins?: (string | ParserPlugin)[]) {
-        if (!plugins) {
-            return;
+        if (plugins && plugins.length) {
+            plugins.forEach(this.registerPlugin);
         }
-
-        plugins.forEach(this.registerPlugin);
     }
 
     registerPlugin = (plugin: string | ParserPlugin): void => {
-        if (typeof plugin === 'string') {
-            this.pluginMap[plugin] = require('plugin');
-            this.plugins.push(this.pluginMap[plugin]);
-        } else {
+        if (typeof plugin !== 'string') {
             this.plugins.push(plugin);
+            return;
         }
+
+        // only register a plugin once
+        if (this.pluginMap[plugin]) {
+            return;
+        }
+
+        this.pluginMap[plugin] = require(plugin);
+        this.plugins.push(this.pluginMap[plugin]);
     }
 
     removePlugin = (plugin: string | ParserPlugin): void => {
@@ -44,22 +56,29 @@ export class MarkdownAstParser implements Parser {
         }
     }
 
-    parse = (text: string, context?: Context): MarkdownFile => {
-        context = context || {};
+    parse = (textDocument: TextDocument, initialContext: Context): MarkdownFile => {
 
-        if (!text) {
+        if (!textDocument || !textDocument.text) {
             return;
         }
 
-        const ast = MarkdownToAst.parse(text);
+        const ast = MarkdownToAst.parse(textDocument.text);
         if (!ast) {
             return;
         }
 
-        const fileSymbols: SymbolInfo[] = [];
+        const fileSymbols: AstSymbolInfo[] = [];
+
+        // Set up context object
+        const context = {
+            absoluteFilePath: textDocument.absoluteFilePath
+        };
+        Object.keys(initialContext || {}).forEach(key => context[key] = initialContext[key]);
 
         const walk = (node: AstNode) => {
             const nodeSymbols = [];
+
+            this.normalizeNode(node as RawNode)
 
             // Visit this node with each plugin
             if (this.plugins && this.plugins.length > 0) {
@@ -89,10 +108,23 @@ export class MarkdownAstParser implements Parser {
         walk(ast);
 
         return {
-            absolutePath: context.absoluteFilePath,
+            text: textDocument.text,
+            absoluteFilePath: textDocument.absoluteFilePath,
             symbols: fileSymbols,
             ast,
-            text,
+        }
+    }
+
+    private normalizeNode(node: RawNode): void {
+        node.location = {
+            start: {
+                line: node.loc.start.line - 1,
+                character: node.loc.start.column
+            },
+            end: {
+                line: node.loc.end.line - 1,
+                character: node.loc.end.column
+            }
         }
     }
 }

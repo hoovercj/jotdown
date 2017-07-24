@@ -1,11 +1,10 @@
 import * as path from 'path';
 var URL = require('url');
 
-import { AstNode, LinkNode, StrNode } from '../../../interfaces/ast-node';
-import { SymbolInfo, SymbolData } from '../../../interfaces/symbol';
+import { AstSymbolInfo, SymbolData, AstNode, LinkNode, StrNode } from '../../../interfaces/jotdown';
 import { ParserPlugin, Context } from '../../../interfaces/parser';
 
-export interface HeaderLinkSymbol extends SymbolInfo {
+export interface HeaderLinkSymbol extends AstSymbolInfo {
     data: HeaderLinkData;
 }
 
@@ -17,7 +16,7 @@ export interface HeaderLinkData extends SymbolData {
 
 export class HeaderLinkPlugin implements ParserPlugin {
 
-    visit(node: AstNode, nodeSymbols: SymbolInfo[], context: Context) {
+    visit(node: AstNode, nodeSymbols: AstSymbolInfo[], context: Context) {
         if (!HeaderLinkPlugin.isLinkNode(node)) {
             return;
         }
@@ -30,10 +29,10 @@ export class HeaderLinkPlugin implements ParserPlugin {
             const urlParts = node.url.split('#');
             let baseUrl = '';
             if (urlParts[0]) { // path is relative
-                const dirname = path.dirname(context.absolutePath || '');
+                const dirname = path.dirname(context.absoluteFilePath || '');
                 baseUrl = path.resolve(dirname, urlParts[0]);
             } else { // no path, use this absolute path
-                baseUrl = context.absolutePath;
+                baseUrl = context.absoluteFilePath;
             }
             const hash = urlParts[1];
             const absoluteSymbolPath = `${baseUrl}${hash && `#${hash}`}`;
@@ -47,8 +46,8 @@ export class HeaderLinkPlugin implements ParserPlugin {
                 kind: 'header-link',
                 name: child.value,
                 location: {
-                    uri: context.absolutePath,
-                    range: node.loc,
+                    uri: context.absoluteFilePath,
+                    range: node.location,
                 },
                 data,
             });

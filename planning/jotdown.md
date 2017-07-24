@@ -51,18 +51,17 @@ etc.
 
 ### Language Service Plugins
 - heading
-  - heading symbol provider: workspace and file symbol providers should show all headings
-  - heading completion provider: typing # in text will provide a list of all workspace headings that are defined, accepting it will generate a link
-  - heading-link symbol provider: file symbol provider should show all heading links
-  - heading-link hover provider: hovering on a heading link should show a hover of the heading body
-  - heading reference provider: find all references of a heading and heading links
-  - heading-link formatter: format heading links by hiding the url and brackets and coloring them
+  - [X] heading symbol provider: workspace and file symbol providers should show all headings
+  - [] heading completion provider: typing # in text will provide a list of all workspace headings that are defined, accepting it will generate a link
+  - [X] heading-link symbol provider: file symbol provider should show all heading links
+  - [] heading-link hover provider: hovering on a heading link should show a hover of the heading body
+  - [X] heading reference provider: find all references of a heading and heading links
+  - [] heading-link formatter: format heading links by hiding the url and brackets and coloring them
 - tag
-  - completion provider: if you're in a tag list, suggest tags that you've used before
-  - reference provider: find all references should show all headings that use this tag 
-  - mention completion provider: typing @ in text will find all tags with a configured tag (default: person) and provide a list of all parent symbols as completion options
+  - [] completion provider: if you're in a tag list, suggest tags that you've used before
+  - [] reference provider: find all references should show all headings that use this tag 
+  - [] mention completion provider: typing @ in text will find all tags with a configured tag (default: person) and provide a list of all parent symbols as completion options
 - alias completion provider: add alias completions, and if you accept them then it is like accepting a completion for the parent header, but it uses the alias text
-
 
 ## Model
 ### Core Data structures

@@ -1,12 +1,11 @@
 import { MarkdownAstParser } from '../../parser';
 import { Parser, ParserPlugin, MarkdownFile, Context } from '../../../interfaces/parser';
-import { AstNode } from '../../../interfaces/ast-node';
-import { SymbolInfo } from '../../../interfaces/symbol';
+import { AstSymbolInfo } from '../../../interfaces/jotdown';
 import { HeaderLinkPlugin, HeaderLinkSymbol } from './header-link';
 
 import * as Path from 'path';
 
-describe('HeaderPlugin', () => {
+describe('HeaderLinkPlugin', () => {
     describe('#visit', () => {
 
         let parser: Parser;
@@ -20,8 +19,9 @@ describe('HeaderPlugin', () => {
 
         it('should extract links', () => {
             const absolutePath = Path.join('C:', 'test.md');
-            const file = parser.parse('[text](#url)', {
-                absolutePath
+            const file = parser.parse({
+                text: '[text](#url)',
+                absoluteFilePath: absolutePath
             });
 
             const symbols = file.symbols;
@@ -36,8 +36,9 @@ describe('HeaderPlugin', () => {
 
         it('should parse relative path links', () => {
             const sourcePath = Path.join('C:', 'folder', 'usage.md');
-            const file = parser.parse('[text](../declaration.md#url)', {
-                absolutePath: sourcePath
+            const file = parser.parse({
+                text: '[text](../declaration.md#url)',
+                absoluteFilePath: sourcePath
             });
             const symbolPath = Path.join('C:', 'declaration.md');
             const symbols = file.symbols;

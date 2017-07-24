@@ -1,5 +1,4 @@
-import { AstNode, HeaderNode } from '../../../interfaces/ast-node';
-import { SymbolInfo, SymbolData } from '../../../interfaces/symbol';
+import { AstSymbolInfo, SymbolData, AstNode, HeaderNode } from '../../../interfaces/jotdown';
 import { ParserPlugin, Context } from '../../../interfaces/parser';
 import { titleToAnchor } from '../../../utils/url-utils/url-utils'
 
@@ -7,7 +6,7 @@ export interface HeaderContext extends Context {
     headerStack: HeaderSymbol[];
 }
 
-export interface HeaderSymbol extends SymbolInfo {
+export interface HeaderSymbol extends AstSymbolInfo {
     data: HeaderData;
 }
 
@@ -19,7 +18,7 @@ export interface HeaderData extends SymbolData {
 export class HeaderPlugin implements ParserPlugin {
 
 
-    visit(node: AstNode, nodeSymbols: SymbolInfo[], context: HeaderContext) {
+    visit(node: AstNode, nodeSymbols: AstSymbolInfo[], context: HeaderContext) {
         if (!HeaderPlugin.isHeaderNode(node)) {
             return;
         }
@@ -51,7 +50,7 @@ export class HeaderPlugin implements ParserPlugin {
             parent: parent,
             location: {
                 uri: context.absoluteFilePath,
-                range: node.loc
+                range: node.location
             },
             data: symbolData
         }

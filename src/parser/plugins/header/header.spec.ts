@@ -1,7 +1,6 @@
 import { MarkdownAstParser } from '../../parser';
 import { Parser, ParserPlugin, MarkdownFile, Context } from '../../../interfaces/parser';
-import { AstNode } from '../../../interfaces/ast-node';
-import { SymbolInfo } from '../../../interfaces/symbol';
+import { AstSymbolInfo } from '../../../interfaces/jotdown';
 import { HeaderPlugin, HeaderSymbol } from './header';
 
 import * as Path from 'path';
@@ -20,7 +19,7 @@ describe('HeaderPlugin', () => {
 
         it('should collect a header', () => {
             // Act
-            const file = parser.parse('# Test1');
+            const file = parser.parse({ text: '# Test1'});
 
             // Assert
             expect(file.symbols[0].name).toBe('Test1');
@@ -28,7 +27,7 @@ describe('HeaderPlugin', () => {
 
         it('should set the kind to "header"', () => {
             // Act
-            const file = parser.parse('# Test1');
+            const file = parser.parse({ text: '# Test1'});
 
             // Assert
             expect(file.symbols[0].kind).toBe('header');
@@ -36,7 +35,7 @@ describe('HeaderPlugin', () => {
 
         it('should collect multiple headers', () => {
             // Act
-            const file = parser.parse('# Test1\n# Test2');
+            const file = parser.parse({ text: '# Test1\n# Test2'});
 
             // Assert
             const symbolNames = file.symbols.map(symbol => symbol.name);
@@ -46,7 +45,7 @@ describe('HeaderPlugin', () => {
         it('should set the depth for H2 headers', () => {
         // it('should add a parent to H3 headers', () => {
             // Act
-            const file = parser.parse('# Test1\n## Test2', { absoluteFilePath: 'path' });
+            const file = parser.parse({ text: '# Test1\n## Test2', absoluteFilePath: 'path'});
 
             // Assert
             const symbol: HeaderSymbol = file.symbols[1] as HeaderSymbol;
@@ -55,7 +54,7 @@ describe('HeaderPlugin', () => {
 
         it('should add a parent to H2 headers', () => {
             // Act
-            const file = parser.parse('# Test1\n## Test2');
+            const file = parser.parse({ text: '# Test1\n## Test2'});
 
             // Assert
             const h1 = file.symbols[0];

@@ -1,7 +1,6 @@
 import { MarkdownAstParser } from './parser';
 import { Parser, ParserPlugin, MarkdownFile, Context } from '../interfaces/parser';
-import { AstNode } from '../interfaces/ast-node';
-import { SymbolInfo } from '../interfaces/symbol';
+import { AstSymbolInfo, AstNode } from '../interfaces/jotdown';
 
 import * as Path from 'path';
 
@@ -26,18 +25,18 @@ describe('MarkdownAstParser', () => {
             parser.registerPlugin(new plugin());
             
             // Act
-            parser.parse('# Test1');
+            parser.parse({ text: '# Test1' });
         });
 
         it('should build a MarkdownFile', () => {
             const plugin = class implements ParserPlugin {
-                visit(node: AstNode, nodeSymbols: SymbolInfo[], context: Context) {
-                    nodeSymbols.push({} as SymbolInfo);
+                visit(node: AstNode, nodeSymbols: AstSymbolInfo[], context: Context) {
+                    nodeSymbols.push({} as AstSymbolInfo);
                 }
             };
             parser.registerPlugin(new plugin());
-            const file = parser.parse('# Hi', { absoluteFilePath: 'path' })
-            expect(file.absolutePath).toEqual('path');
+            const file = parser.parse({text: '# Hi', absoluteFilePath: 'path' })
+            expect(file.absoluteFilePath).toEqual('path');
             expect(file.text).toBe('# Hi');
             expect(file.ast).toBeTruthy();
             expect(file.symbols.length).toBeGreaterThan(0);

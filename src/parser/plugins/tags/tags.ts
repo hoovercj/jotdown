@@ -1,20 +1,19 @@
 import * as path from 'path';
 var URL = require('url');
 
-import { AstNode, ListNode, ListItemNode, ParagraphNode, Position, StrNode } from '../../../interfaces/ast-node';
-import { SymbolInfo, SymbolData } from '../../../interfaces/symbol';
+import { AstSymbolInfo, SymbolData, AstNode, ListNode, ListItemNode, ParagraphNode, Position, StrNode } from '../../../interfaces/jotdown';
 import { ParserPlugin, Context } from '../../../interfaces/parser';
 
 export interface TagContext extends Context {
     inList: boolean;
-    headerStack: SymbolInfo[];
+    headerStack: AstSymbolInfo[];
 }
 
 export interface TagData extends SymbolData {
     label: string;
 } 
 
-export interface TagSymbol extends SymbolInfo {
+export interface TagSymbol extends AstSymbolInfo {
     data: TagData;
 }
 
@@ -34,7 +33,7 @@ export class TagPlugin implements ParserPlugin {
         this.config = config || TagPlugin.DEFAULT_CONFIG;
     }
 
-    visit = (node: AstNode, nodeSymbols: SymbolInfo[], context: TagContext) => {
+    visit = (node: AstNode, nodeSymbols: AstSymbolInfo[], context: TagContext) => {
         if (TagPlugin.isListNode(node)) {
             context.inList = true;
             return;
@@ -61,7 +60,7 @@ export class TagPlugin implements ParserPlugin {
                         kind: 'tag',
                         location: {
                             uri: context.absoluteFilePath,
-                            range: node.loc, // narrow this down?
+                            range: node.location, // narrow this down?
                         },
                         data: {
                             label
@@ -95,7 +94,7 @@ export class TagPlugin implements ParserPlugin {
         return tags;
     }
 
-    afterVisit = (node: AstNode, nodeSymbols: SymbolInfo[], context: TagContext) => {
+    afterVisit = (node: AstNode, nodeSymbols: AstSymbolInfo[], context: TagContext) => {
         context.inList = false;
     }
 

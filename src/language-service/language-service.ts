@@ -1,84 +1,102 @@
-// import {
-//     Workspace,
-//     MarkdownFile,
-//     DeclarationInfo,
-//     UsageInfo,
-//     SymbolInfo,
-// } from '../interfaces/markdown-file';
+import { MarkdownFile } from '../interfaces/parser';
 
-// import { Parser } from '../parser/parser';
+import {
+    TextDocument,
+    AstSymbolInfo,
+    Range,
+    Position,
+    EditorSymbolInfo,
+    AstLocation,
+} from '../interfaces/jotdown'
 
-// export class LanguageService {
-//     private workspace: Workspace = {
-//         files: {}
-//     }
+import {
+    LanguageService,
+    LanguageServicePlugin,
+    Workspace,
+    CompletionItem,
+    ReferenceContext,
+} from '../interfaces/language-service';
 
-//     updateFile = (absolutePath: string, content: string) => {
-//         this.workspace.files[absolutePath] = Parser.parse(content, { absolutePath });
-//     }
+import { MarkdownAstParser } from '../parser/parser';
+import { Parser } from '../interfaces/parser';
 
-//     getFileSymbols = (absolutePath: string): SymbolInfo[] => {
-//         const declarations = this.getFileDeclarations(absolutePath);
-//         const usages = this.getFileUsages(absolutePath);
-//         return [...declarations, ...usages];
-//     }
+export class LanguageServiceHost implements LanguageService {
+    public workspace: Workspace = {
+        files: {}
+    }
 
-//     getFileDeclarations = (absolutePath: string): DeclarationInfo[] => {
-//         const file = this.workspace.files[absolutePath];
-//         if (file) {
-//             return file.declarations;
-//         }
-//         return [];
-//     }
+    private parser: Parser;
 
-//     getFileUsages = (absoluteFilePath: string): UsageInfo[] => {
-//         const file = this.workspace.files[absoluteFilePath];
-//         if (file) {
-//             return file.usages;
-//         }
-//         return [];
-//     }
+    private pluginMap: {[pluginName: string]: LanguageServicePlugin} = {};
+    private plugins: LanguageServicePlugin[] = [];
 
-//     getWorkspaceDeclarations = (): DeclarationInfo[] => {
-//         const declarations: DeclarationInfo[] = [];
+    constructor(plugins?: (string | LanguageServicePlugin)[]) {
+        if (plugins) {
+            plugins.forEach(this.registerPlugin);
+        }
+    }
 
-//         let file: MarkdownFile;
-//         let fileDeclarations: DeclarationInfo;
-//         Object.keys(this.workspace.files).forEach(path => {
-//             declarations.push(...this.getFileDeclarations(path));
-//         });
+    getWorkspace = (): Workspace => {
+        return this.workspace;
+    }
 
-//         return declarations;
-//     }
+    init = (): LanguageService => {
+        this.parser = new MarkdownAstParser();
 
-//     /**
-//      * Gets usages across the workspace for a symbol.
-//      * @param absoluteSymbolPath The absolute path to a symbol, e.g. "C:/path/to/file.md#symbol-name"
-//      * 
-//      * @memberof LanguageService
-//      */
-//     getWorkspaceSymbolReferences = (absoluteSymbolPath: string, includeDeclaration = true): SymbolInfo[] => {
-//         const usages: SymbolInfo[] = [];
+        // Initialize plugins
+        let languageService: LanguageService = this;
+        this.plugins.forEach(plugin => {
 
-//         let fileUsages: UsageInfo[];
-//         Object.keys(this.workspace.files).forEach(path => {
-//             fileUsages = this.getFileUsages(path);
-//             if (fileUsages && fileUsages.length > 0) {
-//                 usages.push(...fileUsages.filter(usage => {
-//                     return usage.absoluteSymbolPath === absoluteSymbolPath;
-//                 }));
-//             }
-//         });
+            languageService = plugin.create({
+                languageService: languageService,
+                parser: this.parser
+            });
+        })
 
-//         if (includeDeclaration) {
-//             const declaration = this.getWorkspaceDeclarations().find(declaration => {
-//                 return declaration.absoluteSymbolPath === absoluteSymbolPath;
-//             });
-//             if (declaration) {
-//                 usages.push(declaration);
-//             }
-//         }
+        return languageService;
+    }
 
-//         return usages;
-//     }
-// }
+    onDidChangeTextDocument = (textDocument: TextDocument) => {
+        this.workspace.files[textDocument.absoluteFilePath] = this.parser.parse(textDocument);
+    }
+
+    // Stub implementations to be overridden by plugins
+    provideCompletionItems = (document: TextDocument, query?: string): CompletionItem[] => { return []; }
+    provideDefinition = (document: TextDocument, position: Position): EditorSymbolInfo => { return null } // TODO: check standard type used
+    provideReferences = (document: TextDocument, position: Position, context?: ReferenceContext): AstLocation[] => { return []; }// TODO: check standard type used
+    provideHover = (document: TextDocument, position: Position): string => { return null; } // TODO: marked string?
+    provideDocumentLinks =(document: TextDocument): any => { return null; } // TODO: what is this??
+    provideDocumentHighlights = (document: TextDocument, position: Position): Range[] => { return []; }// TODO: what is this?
+    provideDocumentSymbols = (document: TextDocument): EditorSymbolInfo[] => { return []; }
+    provideWorkspaceSymbols = (query?: string): EditorSymbolInfo[] => { return []; }
+
+    registerPlugin = (plugin: string | LanguageServicePlugin): void => {
+        if (typeof plugin !== 'string') {
+            this.plugins.push(plugin);
+            return;
+        }
+
+        // only register a plugin once
+        if (this.pluginMap[plugin]) {
+            return;
+        }
+
+        this.pluginMap[plugin] = require(plugin);
+        this.plugins.push(this.pluginMap[plugin]);
+    }
+
+    // Requires re-initing
+    removePlugin = (plugin: string | LanguageServicePlugin): void => {
+        let pluginToRemove;
+        if (typeof plugin === 'string') {
+            pluginToRemove = this.pluginMap[plugin];
+        } else {
+            pluginToRemove = plugin as LanguageServicePlugin;
+        }
+
+        const indexToRemove = this.plugins.indexOf(pluginToRemove);
+        if (indexToRemove >= 0) {
+            this.plugins.splice(indexToRemove, 1);
+        }
+    }
+}

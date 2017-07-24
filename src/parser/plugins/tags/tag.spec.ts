@@ -1,7 +1,6 @@
 import { MarkdownAstParser } from '../../parser';
 import { Parser, ParserPlugin, MarkdownFile, Context } from '../../../interfaces/parser';
-import { AstNode } from '../../../interfaces/ast-node';
-import { SymbolInfo } from '../../../interfaces/symbol';
+import { AstSymbolInfo } from '../../../interfaces/jotdown';
 import { TagPlugin, TagSymbol, Config } from './tags';
 
 import * as Path from 'path';
@@ -20,7 +19,7 @@ describe('HeaderPlugin', () => {
 
         it('should extract tags', () => {
             // Act
-            const file = parser.parse('# Test1\n- tags: this, that, other');
+            const file = parser.parse({text: '# Test1\n- tags: this, that, other'});
 
             // Assert
             const tags = file.symbols.map(tag => tag.name);
@@ -31,11 +30,11 @@ describe('HeaderPlugin', () => {
             // Arrange
             // TagPlugin assigns the parent based on the top
             // value of the headerStack.
-            const parent = { name: 'parent' } as SymbolInfo;
+            const parent = { name: 'parent' } as AstSymbolInfo;
             const context = { headerStack: [parent] };
 
             // Act
-            const file = parser.parse('# Test1\n- tags: this, that, other', context);
+            const file = parser.parse({ text: '# Test1\n- tags: this, that, other'}, context);
 
             // Assert
             expect(file.symbols[0].parent).toBe(parent);
@@ -48,8 +47,7 @@ describe('HeaderPlugin', () => {
             parser.registerPlugin(aliasesPlugin);
 
             // Assert
-            const file = parser.parse('# Test1\n## Info\n- aliases: this, that, other');
-            console.log(JSON.stringify(file));
+            const file = parser.parse({ text: '# Test1\n## Info\n- aliases: this, that, other'});
             const symbolLabels = file.symbols.map((symbol: TagSymbol) => symbol.data.label);
             expect(symbolLabels).toEqual(['aliases', 'aliases', 'aliases']);
         });

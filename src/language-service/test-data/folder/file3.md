@@ -1,1 +1,0 @@
-[text](../file1.md#declaration-1)
